@@ -7,8 +7,6 @@ import glob
 import codecs
 import argparse
 
-import bs4
-import email
 
 from general import email_utils
 
