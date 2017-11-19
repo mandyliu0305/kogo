@@ -44,7 +44,6 @@ def parse_email_with_headers(email_with_headers):
         "subject": msg["Subject"],
         "date": msg["Date"]
     }
-    print(json.dumps(message_summary))
 
     if "order" in msg["Subject"].lower():
         message_summary["text"] = get_text_from_email(msg)

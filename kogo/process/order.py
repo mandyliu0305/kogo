@@ -4,9 +4,10 @@ from __future__ import print_function
 
 import re
 import glob
+import json
 import codecs
+import pprint
 import argparse
-
 
 from general import email_utils
 
@@ -27,17 +28,29 @@ def search_tag(raw_text, tag, n):
     for word in next_word:
         matches = p.findall(word)
         if len(matches):
-            print(tag, matches[0])
+            return matches[0]
 
-    return
+    return None
 
 
-def get_order_info(message_text):
-    msg_splits = [part for part in message_text.splitlines() if len(part)]
+def find_order_info(message_summary):
+    order_info = {
+        "order_number": [],
+        "tracking_number": []
+    }
+    msg_splits = [part for part in message_summary["text"].splitlines() if len(part)]
     for msg_split in msg_splits:
         raw_text = msg_split.lower()
-        search_tag(raw_text, "order", 2)
-        search_tag(raw_text, "tracking", 3)
+        order_number = search_tag(raw_text, "order", 2)
+        if order_number and order_number not in order_info["order_number"]:
+            order_info["order_number"].append(order_number)
+        tracking_number = search_tag(raw_text, "tracking", 3)
+        if tracking_number and tracking_number not in order_info["tracking_number"]:
+            order_info["tracking_number"] = tracking_number
+
+    del message_summary["text"]
+    message_summary.update(order_info)
+    pprint.pprint(message_summary)
 
 
 if __name__ == "__main__":
@@ -50,15 +63,15 @@ if __name__ == "__main__":
         input_file = args.file
         with codecs.open(input_file, "r", "utf-8") as f:
             raw_msg = f.read()
-            msg_summary = email_utils.parse_email_with_headers(raw_msg)
-            if "text" in msg_summary:
-                get_order_info(msg_summary["text"])
+            message_summary = email_utils.parse_email_with_headers(raw_msg)
+            if "text" in message_summary:
+                find_order_info(message_summary)
 
     elif args.directory:
         input_files = glob.glob(args.directory + "*.txt")
         for input_file in input_files:
             with codecs.open(input_file, "r", "utf-8") as f:
                 raw_msg = f.read()
-                msg_summary = email_utils.parse_email_with_headers(raw_msg)
-                if "text" in msg_summary:
-                    get_order_info(msg_summary["text"])
+                message_summary = email_utils.parse_email_with_headers(raw_msg)
+                if "text" in message_summary:
+                    find_order_info(message_summary)
