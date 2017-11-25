@@ -53,13 +53,20 @@ def get_mime_message(message):
     raw_message = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
     msg = email.message_from_bytes(raw_message)
 
+
+
     message_summary =  {
         "sender": msg["From"],
         "subject": msg["Subject"],
         "date": msg["Date"]
     }
-
-    if "order" in msg["Subject"].lower():
-        message_summary["text"] = get_text_from_email(msg)
+    for field in message_summary:
+        if isinstance(message_summary[field], email.header.Header):
+            message_summary[field] = str(message_summary[field])
+    try:
+        if "order" in msg["Subject"].lower():
+            message_summary["text"] = get_text_from_email(msg)
+    except Exception as e:
+        print(e)
 
     return message_summary
