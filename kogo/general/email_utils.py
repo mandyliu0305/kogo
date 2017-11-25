@@ -2,11 +2,9 @@
 
 from __future__ import print_function
 
-import re
-import json
-
 import bs4
 import email
+import base64
 
 
 def get_text_from_part(part):
@@ -50,3 +48,18 @@ def parse_email_with_headers(email_with_headers):
 
     return message_summary
 
+
+def get_mime_message(message):
+    raw_message = base64.urlsafe_b64decode(message['raw'].encode('ASCII'))
+    msg = email.message_from_bytes(raw_message)
+
+    message_summary =  {
+        "sender": msg["From"],
+        "subject": msg["Subject"],
+        "date": msg["Date"]
+    }
+
+    if "order" in msg["Subject"].lower():
+        message_summary["text"] = get_text_from_email(msg)
+
+    return message_summary

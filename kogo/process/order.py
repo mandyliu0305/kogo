@@ -4,12 +4,11 @@ from __future__ import print_function
 
 import re
 import glob
-import json
 import codecs
 import pprint
 import argparse
 
-from general import email_utils
+from kogo.general import email_utils
 
 
 def search_tag(raw_text, tag, n):
@@ -34,6 +33,9 @@ def search_tag(raw_text, tag, n):
 
 
 def find_order_info(message_summary):
+    if "text" not in message_summary:
+        return message_summary
+
     order_info = {
         "order_number": [],
         "tracking_number": []
@@ -50,7 +52,7 @@ def find_order_info(message_summary):
 
     del message_summary["text"]
     message_summary.update(order_info)
-    pprint.pprint(message_summary)
+    return message_summary
 
 
 if __name__ == "__main__":
@@ -64,8 +66,8 @@ if __name__ == "__main__":
         with codecs.open(input_file, "r", "utf-8") as f:
             raw_msg = f.read()
             message_summary = email_utils.parse_email_with_headers(raw_msg)
-            if "text" in message_summary:
-                find_order_info(message_summary)
+            order_info = find_order_info(message_summary)
+            pprint.pprint(order_info)
 
     elif args.directory:
         input_files = glob.glob(args.directory + "*.txt")
@@ -73,5 +75,5 @@ if __name__ == "__main__":
             with codecs.open(input_file, "r", "utf-8") as f:
                 raw_msg = f.read()
                 message_summary = email_utils.parse_email_with_headers(raw_msg)
-                if "text" in message_summary:
-                    find_order_info(message_summary)
+                order_info = find_order_info(message_summary)
+                pprint.pprint(order_info)
